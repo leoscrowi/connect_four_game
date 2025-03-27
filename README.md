@@ -12,10 +12,3 @@
     ```bash
     ./player1
     ```
-
-
-## Пример работы:
-
-![alt text](image.png)
-
-![alt text](image-1.png)
