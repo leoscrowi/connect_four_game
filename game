@@ -1,0 +1,99 @@
+#!/bin/bash
+
+COLUMNS=7
+ROWS=6
+EMPTY='⚪'
+
+create_board() {
+    for ((i=0; i<ROWS; i++)); do
+        for ((j=0; j<COLUMNS; j++)); do
+            echo -n "$EMPTY"
+        done
+        echo
+    done > board.txt
+}
+
+print_board() {
+    clear
+    echo " 1  2  3  4  5  6  7"
+    while read -r line
+    do
+        echo "$line" | sed 's/./& /g'
+    done < board.txt
+}
+
+
+make_move() {
+    local col=$(($1 - 1))
+    local symbol=$2
+
+    if (( col < 0 || col >= COLUMNS ))
+    then
+        return 1
+    fi
+
+    mapfile -t lines < board.txt
+    for ((i=ROWS-1; i>=0; i--)) do
+        row="${lines[$i]}"
+        cell="${row:$col:1}"
+        if [[ $cell == "$EMPTY" ]] 
+        then
+            lines[$i]="${row:0:$col}$symbol${row:$((col+1))}"
+            printf "%s\n" "${lines[@]}" > board.txt
+            return 0
+        fi
+    done
+    return 1
+}
+
+check_win() {
+    local symbol=$1
+    local b
+    mapfile -t b < board.txt
+
+    for ((i=0; i<ROWS; i++)); do
+        for ((j=0; j<=COLUMNS-4; j++)); do
+            if [[ "${b[i]:j:1}" == "$symbol" &&
+                  "${b[i]:j+1:1}" == "$symbol" &&
+                  "${b[i]:j+2:1}" == "$symbol" &&
+                  "${b[i]:j+3:1}" == "$symbol" ]]; then
+                return 0
+            fi
+        done
+    done
+
+    for ((i=0; i<=ROWS-4; i++)); do
+        for ((j=0; j<COLUMNS; j++)); do
+            if [[ "${b[i]:j:1}" == "$symbol" &&
+                  "${b[i+1]:j:1}" == "$symbol" &&
+                  "${b[i+2]:j:1}" == "$symbol" &&
+                  "${b[i+3]:j:1}" == "$symbol" ]]; then
+                return 0
+            fi
+        done
+    done
+
+    for ((i=0; i<=ROWS-4; i++)); do
+        for ((j=0; j<=COLUMNS-4; j++)); do
+            if [[ "${b[i]:j:1}" == "$symbol" &&
+                  "${b[i+1]:j+1:1}" == "$symbol" &&
+                  "${b[i+2]:j+2:1}" == "$symbol" &&
+                  "${b[i+3]:j+3:1}" == "$symbol" ]]; then 
+                  return 0
+            fi
+        done
+    done
+
+    for ((i=3; i<ROWS; i++)); do
+        for ((j=0; j<=COLUMNS-4; j++)); do
+            if [[ "${b[i]:j:1}" == "$symbol" &&
+                  "${b[i-1]:j+1:1}" == "$symbol" &&
+                  "${b[i-2]:j+2:1}" == "$symbol" &&
+                  "${b[i-3]:j+3:1}" == "$symbol" ]]; then
+                  return 0
+            fi
+        done
+    done
+
+    return 1
+}

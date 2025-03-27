@@ -1,0 +1,49 @@
+#!/bin/bash
+source ./game
+
+OPPONENT_PID_FILE="player1.pid"
+MY_PID_FILE="player2.pid"
+echo $$ > "$MY_PID_FILE"
+
+SYMBOL="🔵"
+
+create_board
+
+trap "sigusr" USR1
+trap "lose" SIGTERM
+
+lose() {
+    print_board
+    echo "Вы проиграли :("
+    exit
+}
+
+sigusr() {
+    print_board
+    echo "Ваш ход"
+    read -p "Выберите столбец: " col
+    make_move "$col" "$SYMBOL"
+
+    print_board
+    if check_win "$SYMBOL";
+    then
+        echo "Вы победили!!"
+        kill -SIGTERM $(cat "$OPPONENT_PID_FILE")
+        exit
+    fi
+
+    kill -USR2 $(cat "$OPPONENT_PID_FILE")
+}
+
+if [[ ! -f board.txt ]]
+then
+    create_board
+fi
+
+print_board
+
+
+while true 
+do
+    sleep 1
+done
